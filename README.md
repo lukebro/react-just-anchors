@@ -4,6 +4,14 @@ I recently experimented with [SvelteKit](https://kit.svelte.dev) and one thing t
 
 In React, we often use a `<Link>` component provided by routing libraries and frameworks like [Next.js Link](https://nextjs.org/docs/api-reference/next/link) or [Remix/react-router Link](https://remix.run/docs/en/main/components/link). But why do we need a separate component for this?
 
+```jsx
+// before
+<Link href="/page/one">Page One</Link>
+
+// after
+<a href="/page/one">Page One</a>
+```
+
 There are several benefits to using regular anchor tags for routing in React:
 
 1. 3rd party UI libraries don't need to be aware of your router, making integration easy (["it just works"](https://mui.com/material-ui/guides/routing/#global-theme-link)).
@@ -30,6 +38,41 @@ The relevant files for this exploration are:
 
  - [`src/just-anchors.ts`](./src/just-anchors.ts)
  - [`src/Nav.tsx`](./src/Nav.tsx)
+
+
+A naive implementation is basically ~30 lines:
+
+```jsx
+import { navigate } from 'wouter/use-location';
+
+addEventListener('click', function (event) {
+  const target = event.target;
+
+  if (
+    !(target instanceof HTMLAnchorElement) ||
+    !target.href ||
+    event.defaultPrevented
+  ) {
+    return;
+  }
+
+  const url = new URL(target.href);
+  if (location.origin !== url.origin) {
+    return;
+  }
+
+  let n: HTMLElement | null = target;
+  while (n) {
+    if (n.dataset.reload) {
+      return;
+    }
+    n = n.parentElement;
+  }
+
+  event.preventDefault();
+  navigate(target.href);
+});
+```
 
 ## How to run
 
